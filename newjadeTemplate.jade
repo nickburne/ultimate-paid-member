@@ -1,0 +1,272 @@
+<?php
+
+/*
+  Plugin Name: MF User Migration Plugin
+  Plugin URL: http://www.musofinder.com
+  Description: A useful plugin to migrate user data to wordpress site
+  Author: Shramee
+  Author URL: http://www.shramee.com
+ */
+
+add_filter('um_user_avatar_url_filter', 'mf_user_image');
+
+function mf_user_image($url) {
+	if (!$url) {
+		$img = um_profile('profile_photo');
+		if (strpos($img, 'musofinder')) {
+			$url = $img;
+		}
+	}
+	return $url;
+}
+
+function mf_user_migration() {
+	$countries = array(28 => 'Belarus', 27 => 'Barbados', 26 => 'Bangladesh', 25 => 'Bahrain', 24 => 'Bahamas', 23 => 'Azerbaijan', 22 => 'Austria', 9 => 'Afghanistan', 10 => 'Albania', 11 => 'Algeria', 12 => 'American Samoa', 13 => 'Andorra', 14 => 'Angola', 15 => 'Anguilla', 16 => 'Antarctica', 17 => 'Antigua and Barbuda', 18 => 'Argentina', 19 => 'Armenia', 20 => 'Aruba', 21 => 'Australia', 29 => 'Belgium', 30 => 'Belize', 31 => 'Benin', 32 => 'Bermuda', 33 => 'Bhutan', 34 => 'Bolivia', 35 => 'Bosnia and Herzegovi', 36 => 'Botswana', 37 => 'Bouvet Island', 38 => 'Brazil', 39 => 'British Indian Ocean', 40 => 'Brunei', 41 => 'Bulgaria', 42 => 'Burkina Faso', 43 => 'Burundi', 44 => 'Cambodia', 45 => 'Cameroon', 46 => 'Canada', 47 => 'Cape Verde', 48 => 'Cayman Islands', 49 => 'Central African Republic', 50 => 'Chad', 51 => 'Chile', 52 => 'China', 53 => 'Christmas Island', 54 => 'Cocos (Keeling) Islands', 55 => 'Colombia', 56 => 'Congo', 57 => 'Cook Islands', 58 => 'Costa Rica', 59 => 'Cote d\'Ivoire', 60 => 'Croatia (Hrvatska)', 61 => 'Cuba', 62 => 'Cyprus', 63 => 'Czech Republic', 64 => 'Congo (DRC)', 65 => 'Denmark', 66 => 'Djibouti', 67 => 'Dominica', 68 => 'Dominican Republic', 69 => 'East Timor', 70 => 'Ecuador', 71 => 'Egypt', 72 => 'El Salvador', 73 => 'Equatorial Guinea', 74 => 'Eritrea', 75 => 'Estonia', 76 => 'Ethiopia', 77 => 'Falkland Islands', 78 => 'Faroe Islands', 79 => 'Fiji Islands', 80 => 'Finland', 81 => 'France', 82 => 'French Guiana', 83 => 'French Polynesia', 85 => 'Gabon', 86 => 'Gambia', 87 => 'Georgia', 88 => 'Germany', 89 => 'Ghana', 90 => 'Gibraltar', 91 => 'Greece', 92 => 'Greenland', 93 => 'Grenada', 94 => 'Guadeloupe', 95 => 'Guam', 96 => 'Guatemala', 97 => 'Guinea', 98 => 'GuineaBissau', 99 => 'Guyana', 100 => 'Haiti', 102 => 'Honduras', 103 => 'Hong Kong SAR', 104 => 'Hungary', 105 => 'Iceland', 106 => 'India', 107 => 'Indonesia', 108 => 'Iran', 109 => 'Iraq', 110 => 'Ireland', 111 => 'Israel', 112 => 'Italy', 113 => 'Jamaica', 114 => 'Japan', 115 => 'Jordan', 116 => 'Kazakhstan', 117 => 'Kenya', 118 => 'Kiribati', 119 => 'Korea', 120 => 'Kuwait', 121 => 'Kyrgyzstan', 122 => 'Laos', 123 => 'Latvia', 124 => 'Lebanon', 125 => 'Lesotho', 126 => 'Liberia', 127 => 'Libya', 128 => 'Liechtenstein', 129 => 'Lithuania', 130 => 'Luxembourg', 131 => 'Macau SAR', 133 => 'Madagascar', 134 => 'Malawi', 135 => 'Malaysia', 136 => 'Maldives', 137 => 'Malta', 138 => 'Marshall Islands', 139 => 'Martinique', 140 => 'Mauritania', 141 => 'Mauritius', 142 => 'Mayotte', 143 => 'Mexico', 144 => 'Micronesia', 145 => 'Moldova', 146 => 'Monaco', 147 => 'Mongolia', 148 => 'Montserrat', 149 => 'Morocco', 150 => 'Mozambique', 151 => 'Myanmar', 152 => 'Namibia', 153 => 'Nauru', 154 => 'Nepal', 155 => 'Netherlands', 156 => 'Netherlands Antilles', 157 => 'New Caledonia', 158 => 'New Zealand', 159 => 'Nicaragua', 160 => 'Niger', 161 => 'Nigeria', 162 => 'Niue', 163 => 'Norfolk Island', 164 => 'North Korea', 165 => 'Northern Mariana Islands', 166 => 'Norway', 167 => 'Oman', 168 => 'Pakistan', 169 => 'Palau', 170 => 'Panama', 171 => 'Papua New Guinea', 172 => 'Paraguay', 173 => 'Peru', 174 => 'Philippines', 175 => 'Pitcairn Islands', 176 => 'Poland', 177 => 'Portugal', 178 => 'Puerto Rico', 179 => 'Qatar', 180 => 'Reunion', 181 => 'Romania', 182 => 'Russia', 183 => 'Rwanda', 184 => 'St. Kitts and Nevis', 185 => 'St. Lucia', 187 => 'Samoa', 188 => 'San Marino', 189 => 'Sao Tome and Principe', 190 => 'Saudi Arabia', 191 => 'Senegal', 192 => 'Seychelles', 193 => 'Sierra Leone', 194 => 'Singapore', 195 => 'Slovakia', 196 => 'Slovenia', 197 => 'Solomon Islands', 198 => 'Somalia', 199 => 'South Africa', 201 => 'Spain', 202 => 'Sri Lanka', 203 => 'St. Helena', 204 => 'St. Pierre and Miquelon', 205 => 'Sudan', 206 => 'Suriname', 207 => 'Svalbard and Jan Mayen', 208 => 'Swaziland', 209 => 'Sweden', 210 => 'Switzerland', 211 => 'Syria', 212 => 'Taiwan', 213 => 'Tajikistan', 214 => 'Tanzania', 215 => 'Thailand', 216 => 'Togo', 217 => 'Tokelau', 218 => 'Tonga', 219 => 'Trinidad and Tobago', 220 => 'Tunisia', 221 => 'Turkey', 222 => 'Turkmenistan', 223 => 'Turks and Caicos Islands', 224 => 'Tuvalu', 225 => 'Uganda', 226 => 'Ukraine', 227 => 'United Arab Emirates', 228 => 'United Kingdom', 229 => 'United States', 231 => 'Uruguay', 232 => 'Uzbekistan', 233 => 'Vanuatu', 234 => 'Vatican City', 235 => 'Venezuela', 236 => 'Vietnam', 237 => 'Virgin Islands (British)', 238 => 'Virgin Islands', 239 => 'Wallis and Futuna', 240 => 'Yemen', 241 => 'Yugoslavia', 242 => 'Zambia', 243 => 'Zimbabwe',);
+	$skill_tags = array(
+		'percuss' => 'Percussionist',
+		'viol' => 'Violinist',
+		'compos' => 'Composer',
+		'clarin' => 'Clarentist',
+		'woodwind' => 'Woodwind',
+		'ukul' => 'Ukulele',
+		'double' => 'Double Bass',
+		'banj' => 'Banjo',
+		'mandol' => 'Mandolin',
+		'cello' => 'Celloist',
+		'trump' => 'Trumpet',
+		'organ' => 'Organist',
+		'flut' => 'Flautist',
+		'flaut' => 'Flautist',
+		'chorister' => 'Chori',
+		'fidd' => 'Fiddle',
+		'vibraphone' => 'vibraphone',
+		'tenor' => 'tenor',
+		'soprano' => 'soprano',
+		'record' => 'Recorder',
+		'accord' => 'Accordion',
+		'harp' => 'Harp',
+		'programmer' => 'programmer',
+		'brass' => 'Brass',
+		'harps' => 'Harpsicord',
+		'bong' => 'Bongo',
+		'piccol' => 'Piccolo',
+		'guitar' => 'Guitarist',
+		'bass' => 'Bassist',
+		'singer' => 'Singer',
+		'vocal' => 'Vocalist',
+		'drum' => 'Drummer',
+		'keyboard' => 'Keyboard',
+		'synth' => 'Synth',
+		'pian' => 'Pianist',
+		'producer' => 'Producer',
+		'singer' => 'Singer',
+		'song' => 'Songwriter',
+	);
+
+	$conn = new mysqli("localhost", "iex_musofinder", "49be=mE%onTX", "iex_mf_old");
+
+	if ($conn->connect_error) {
+		die("Connection failed: " . $conn->connect_error);
+	}
+
+	$result = $conn->query("SELECT * FROM  mf_usr_data");
+	// Associative array
+	while ($row = $result->fetch_assoc()) {
+
+
+		$tags = explode('|', strtolower($row['objectTags']));
+
+		$skills = array();
+
+		foreach ($tags as $tag) {
+			foreach ($skill_tags as $k => $tg) {
+				if (false !== strpos($tag, $k)) {
+					$skills[] = $tg;
+				}
+			}
+		}
+
+		//@TODO last adv
+		$last_ad = '';
+
+		//@TODO Get profile pic
+		$pic = avatar_url($row['username']);
+		echo "( '" .
+		$row['email'] . "', '" .
+		$row['username'] . "', '" .
+		gen_rnd_pswd() . "', '" .
+		$countries[$row['country']] . "', '" .
+		$row['area'] . "', '" .
+		implode('|', array_unique($skills)) . "', '" .
+		$row['lastUpdate'] . "', '" .
+		$row['date'] . "', '" .
+		$pic . "'" .
+		' ),<br>';
+	}
+	$conn->close();
+	die('All done :)');
+}
+
+if (!empty($_GET['mf-user_migration'])) {
+	mf_user_migration();
+} elseif (!empty($_GET['mf-wp-add-users'])) {
+	add_action('init', 'mf_add_wp_users');
+
+}
+
+	function mf_add_wp_users() {
+		$tags_starting = array(
+			'percuss' => 'Percussionist',
+			'viol' => 'Violinist',
+			'compos' => 'Composer',
+			'clarin' => 'Clarentist',
+			'woodwind' => 'Woodwind',
+			'ukul' => 'Ukulele',
+			'double' => 'Double Bass',
+			'banj' => 'Banjo',
+			'mandol' => 'Mandolin',
+			'cello' => 'Celloist',
+			'trump' => 'Trumpet',
+			'organ' => 'Organist',
+			'flut' => 'Flautist',
+			'flaut' => 'Flautist',
+			'chorister' => 'Chori',
+			'fidd' => 'Fiddle',
+			'vibraphone' => 'vibraphone',
+			'tenor' => 'tenor',
+			'soprano' => 'soprano',
+			'record' => 'Recorder',
+			'accord' => 'Accordion',
+			'harp' => 'Harp',
+			'programmer' => 'programmer',
+			'brass' => 'Brass',
+			'harps' => 'Harpsicord',
+			'bong' => 'Bongo',
+			'piccol' => 'Piccolo',
+			'guitar' => 'Guitarist',
+			'bass' => 'Bassist',
+			'singer' => 'Singer',
+			'vocal' => 'Vocalist',
+			'drum' => 'Drummer',
+			'keyboard' => 'Keyboard',
+			'synth' => 'Synth',
+			'pian' => 'Pianist',
+			'producer' => 'Producer',
+			'singer' => 'Singer',
+			'song' => 'Songwriter',
+		);
+
+		$skill_tags = array(
+			'Percussionist' => 'percussion',
+			'Violinist' => 'violin',
+			'Composer' => 'composer',
+			'Clarentist' => 'clarent',
+			'Woodwind' => 'woodwind',
+			'Ukulele' => 'ukulele',
+			'Double Bass' => 'double-bass',
+			'Banjo' => 'banjo',
+			'Mandolin' => 'mandolin',
+			'Celloist' => 'cello',
+			'Trumpet' => 'trumpet',
+			'Organist' => 'organ',
+			'Flautist' => 'flute',
+			'Chori' => 'chorister',
+			'Fiddle' => 'fiddle',
+			'vibraphone' => 'vibraphone',
+			'tenor' => 'tenor',
+			'soprano' => 'soprano',
+			'Recorder' => 'recorder',
+			'Accordion' => 'accordion',
+			'Harp' => 'harp',
+			'programmer' => 'programmer',
+			'Brass' => 'brass',
+			'Harpsicord' => 'harpsicord',
+			'Bongo' => 'bongo',
+			'Piccolo' => 'piccolo',
+			'Guitarist' => 'guitar',
+			'Bassist' => 'bass',
+			'Singer' => 'singer',
+			'Vocalist' => 'vocals',
+			'Drummer' => 'drums',
+			'Keyboard' => 'keyboard',
+			'Synth' => 'synth',
+			'Pianist' => 'piano',
+			'Producer' => 'producer',
+			'Songwriter' => 'songwriter',
+		);
+
+		$conn = new mysqli("localhost", "iex_musofinder", "49be=mE%onTX", "iex_mf_old");
+
+		if ($conn->connect_error) {
+			die("Connection failed: " . $conn->connect_error);
+		}
+
+		$result = $conn->query(
+			"SELECT user, pass, mf_user_data.email, mf_user_data.country, mf_user_data.city, pic, objectTags
+			FROM mf_user_data
+			JOIN mf_usr_data ON mf_user_data.user = mf_usr_data.username
+			WHERE mf_user_data.`country` NOT LIKE 'United Kingdom'
+			AND mf_user_data.`country` NOT LIKE 'United States'
+			LIMIT 0, 99999"
+		);
+
+    $errors = '';
+		while ($row = $result->fetch_assoc()) {
+
+			$userdata = array(
+				'user_login' => $row['user'],
+				'user_pass' => $row['pass'], // When creating an user, `user_pass` is expected.
+				'user_email' => $row['email'],
+			);
+
+			$user_id = null;
+			$user_id = wp_insert_user($userdata);
+
+			//On success
+			if ($user_id && is_numeric($user_id)) {
+
+        $tags = explode('|', strtolower($row['objectTags']));
+  
+      $skills = array();
+  
+      foreach ($tags as $tag) {
+        foreach ($tags_starting as $k => $tg) {
+          if (false !== strpos($tag, $k)) {
+            $skills[] = $skill_tags[$tg];
+          }
+        }
+      }
+
+        
+				update_user_meta($user_id, 'country', $row['country']);
+				update_user_meta($user_id, 'city', $row['city']);
+				update_user_meta($user_id, 'skills', $skills);
+				update_user_meta($user_id, 'profile_photo', $row['pic']);
+				update_user_meta($user_id, 'role', 'free-member');
+				$spn = " <span style='width:250px;'> ";
+				echo
+					"$spn $user_id</span>" .
+					"$spn Country: $row[country]</span>" .
+					"$spn City: $row[city] </span><br>\n";
+			} else {
+				$errors .= print_r( $user_id, true );
+				$errors .= "$row[user] $row[email] <br>\n";
+			}
+		}
+		die( $errors );
+	}
+
+function avatar_url($username, $out = false) {
+	return file_get_contents("http://www.musofinder.com/get_avatar_url.php?user_name=$username");
+}
+
+function gen_rnd_pswd() {
+	$alphabet = 'abcdefghijk-lmnopqrstuvwxyz@ABCDEFGHIJKLMNO_PQRSTUVWXYZ!1234567890%';
+	$pass = array();
+	$alphaLength = strlen($alphabet) - 1;
+	for ($i = 0; $i < 8; $i++) {
+		$n = rand(0, $alphaLength);
+		$pass[] = $alphabet[$n];
+	}
+	return implode($pass);
+}
